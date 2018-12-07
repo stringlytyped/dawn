@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+clear
+
+hcenter " "
+hcenter "🏁"
+hcenter " "
+hcenter "Next Steps " "$yellow"
+hcenter " "
+echo "Whew! Your Mac is now all set up. Well, except for a few things:"
+echo ""
+echo "  - Install Xcode"
+echo "  - Install Pages 4.3, Keynote 5.3 and Numbers 2.3"
+echo "  - Install Adobe Photoshop, Illustrator, InDesign and Acrobat"
+echo "  - Install Sketch"
+echo "  - Install 1Password"
+echo "  - Install VMWare Fusion"
+echo "  - Change Finder preferences to search current folder"
+echo "    (Finder menu > Preferences > Advanced > When performing a search)"
+echo "  - Change what appears in the Finder sidebar"
+echo "    (Finder menu > Preferences > Sidebar)"
+echo ""
+echo "You'll need to perform these tasks manually. Good luck!"
+echo ""

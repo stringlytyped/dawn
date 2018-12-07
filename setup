@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+
+source functions
+
+clear
+hcenter " "
+hcenter "☀️"
+hcenter " "
+hcenter "Let's set up this Mac!" "$fg_red"
+hcenter " "
+echo "This script will:"
+echo ""
+echo "  1. Configure the command line"
+echo "  2. Install a ton of apps"
+echo "  3. Add all your favourite fonts"
+echo "  4. Change a whole lot of macOS defaults"
+echo "  5. Remind you of the setup tasks you need to complete manually"
+echo ""
+echo "Hit return now to perform all these tasks in order."
+echo "Or enter the number corresponding to the task you'd like to perform."
+echo ""
+read -r response
+case $response in
+  1 )
+    sudo_keepalive
+    source configure_cli
+    source setup
+    ;;
+  2 )
+    sudo_keepalive
+    source install_apps
+    source setup
+    ;;
+  3 )
+    sudo_keepalive
+    source install_fonts
+    source setup
+    ;;
+  4 )
+    sudo_keepalive
+    source configure_os
+    source setup
+    ;;
+  5 )
+    source next_steps
+    ;;
+  "" )
+    sudo_keepalive
+    source configure_cli
+    source install_apps
+    source install_fonts
+    source configure_os
+    source next_steps
+    ;;
+  *)
+    echo ""
+    cecho "Invalid selection." "$red"
+    exit
+    ;;
+esac

@@ -1,0 +1,143 @@
+#!/usr/bin/env bash
+#
+# Configures OS and applications with the correct preferences
+
+task_title 4 "Configure Mac OS X"
+
+ask "Hostname? (Hit return to skip)"
+if [ ! "$response" = "" ]; then
+  sudo scutil --set HostName "$response"
+  sudo scutil --set LocalHostName "$response"
+  sudo scutil --set ComputerName "$response"
+  sudo defaults write /Library/Preferences/SystemConfiguration/com.apple.smb.server NetBIOSName -string "$response"
+else
+  cecho "Skipping." "$cyan"
+fi
+
+if [ -d "/Volumes/Macintosh HD" ]; then
+  ask "HDD/SSD volume name? (Hit return to skip)"
+  if [ ! "$response" = "" ]; then
+    diskutil rename "Macintosh HD" "$response"
+  else
+    cecho "Skipping." "$cyan"
+  fi
+fi
+
+yn "Set sensible OS X defaults?"
+if [ "$response" = y ]; then
+
+  cecho "Disabling Spotlight indexing for newly-mounted drives…" "$cyan"
+  sudo defaults write /.Spotlight-V100/VolumeConfiguration Exclusions -array "/Volumes"
+
+  cecho "Expand the save and print panels by default…" "$cyan"
+  defaults write NSGlobalDomain NSNavPanelExpandedStateForSaveMode -bool true
+  defaults write NSGlobalDomain PMPrintingExpandedStateForPrint -bool true
+  defaults write NSGlobalDomain PMPrintingExpandedStateForPrint2 -bool true
+
+  cecho "Automatically quit printer app once the print jobs complete…" "$cyan"
+  defaults write com.apple.print.PrintingPrefs "Quit When Finished" -bool true
+
+  cecho "Save to disk, rather than iCloud, by default…" "$cyan"
+  defaults write NSGlobalDomain NSDocumentSaveNewDocumentsToCloud -bool false
+
+  cecho "Check for software updates daily, not just once per week…" "$cyan"
+  defaults write com.apple.SoftwareUpdate ScheduleFrequency -int 1
+
+  cecho "Enter standby mode after 12 hours instead of after 1…" "$cyan"
+  sudo pmset -a standbydelay 43200
+
+  cecho "Enabling full keyboard access for all controls…" "$cyan"
+  defaults write NSGlobalDomain AppleKeyboardUIMode -int 3
+
+  cecho "Require password immediately after sleep or screen saver begins…" "$cyan"
+  defaults write com.apple.screensaver askForPassword -int 1
+  defaults write com.apple.screensaver askForPasswordDelay -int 0
+
+  cecho "Create symbolic link to user's Applications folder in Mac App folder…" "$cyan"
+  if ! [ -d "/Applications/* User Applications" ]; then
+    ln -s ~/Applications "/Applications/* User Applications"
+  fi
+
+  cecho "Show all filename extensions in Finder…" "$cyan"
+  defaults write NSGlobalDomain AppleShowAllExtensions -bool true
+
+  # cecho "Show status bar in Finder by default…" "$cyan"
+  # defaults write com.apple.finder ShowStatusBar -bool true
+
+  # cecho "Display full POSIX path as Finder window title…" "$cyan"
+  # defaults write com.apple.finder _FXShowPosixPathInTitle -bool true
+
+  cecho "Disable the warning when changing a file extension…" "$cyan"
+  defaults write com.apple.finder FXEnableExtensionChangeWarning -bool false
+
+  cecho "Use column view in all Finder windows by default…" "$cyan"
+  defaults write com.apple.finder FXPreferredViewStyle clmv
+
+  cecho "Allowing text selection in Quick Look…" "$cyan"
+  defaults write com.apple.finder QLEnableTextSelection -bool true
+
+  cecho "When opening a Finder window, navigate to Home…" "$cyan"
+  defaults write com.apple.finder NewWindowTarget PfHm
+
+  cecho "Enable snap-to-grid for icons on the desktop and in other icon views…" "$cyan"
+  /usr/libexec/PlistBuddy -c "Set :DesktopViewSettings:IconViewSettings:arrangeBy grid" ~/Library/Preferences/com.apple.finder.plist
+  /usr/libexec/PlistBuddy -c "Set :FK_StandardViewSettings:IconViewSettings:arrangeBy grid" ~/Library/Preferences/com.apple.finder.plist
+  /usr/libexec/PlistBuddy -c "Set :StandardViewSettings:IconViewSettings:arrangeBy grid" ~/Library/Preferences/com.apple.finder.plist
+
+  cecho "Set dock app icons…" "$cyan"
+  defaults write com.apple.dock persistent-apps -array
+  add_dock_icon "/Applications/System Preferences.app"
+  add_dock_separator
+  add_dock_icon "/Applications/FirefoxDeveloperEdition.app"
+  add_dock_icon "/Applications/Messages.app"
+  add_dock_icon "/Applications/FaceTime.app"
+  add_dock_separator
+  add_dock_icon "/Applications/Adobe Photoshop CC 2014/Adobe Photoshop CC 2014.app"
+  add_dock_icon "/Applications/Adobe Illustrator CC 2014/Adobe Illustrator.app"
+  add_dock_icon "/Applications/Adobe InDesign CC/Adobe InDesign CC.app"
+  add_dock_icon "/Applications/Sketch.app"
+  add_dock_separator
+  add_dock_icon "Applications/Visual Studio Code.app"
+  add_dock_icon "/Applications/Utilities/Terminal.app"
+  add_dock_icon "Applications/SourceTree.app"
+  add_dock_separator
+
+  cecho "Prevent Time Machine from prompting to use new hard drives as backup volume…" "$cyan"
+  defaults write com.apple.TimeMachine DoNotOfferNewDisksForBackup -bool true
+
+  # cecho "Transmission: Setting up an incomplete downloads folder in Junkyard…" "$cyan"
+  # mkdir -p ~/Junkyard/Incomplete\ Downloads
+  # defaults write org.m0k.transmission UseIncompleteDownloadFolder -bool true
+  # defaults write org.m0k.transmission IncompleteDownloadFolder -string "${HOME}/Junkyard/Incomplete Downloads"
+
+  # cecho "Transmission: Don't prompt for confirmation before downloading…" "$cyan"
+  # defaults write org.m0k.transmission DownloadAsk -bool false
+
+  # cecho "Transmission: Trash original torrent files…" "$cyan"
+  # defaults write org.m0k.transmission DeleteOriginalTorrent -bool true
+
+  cecho "Transmission: Hide the donate message…" "$cyan"
+  defaults write org.m0k.transmission WarningDonate -bool false
+
+  cecho "Transmission: Hide the legal disclaimer…" "$cyan"
+  defaults write org.m0k.transmission WarningLegal -bool false
+
+  cecho "Done!" "$cyan"
+
+else
+  cecho "Skipping." "$cyan"
+fi
+
+yn "Close apps affected by the previous changes?"
+if [ "$response" = y ]; then
+
+  cecho "Killing necessary applications to have changes take effect…" "$cyan"
+  for app in "cfprefsd" "Dock" "Finder" "SystemUIServer" "Transmission"; do
+    killall "${app}" > /dev/null 2>&1
+  done
+
+  cecho "Done!" "$cyan"
+
+else
+  cecho "Skipping." "$cyan"
+fi

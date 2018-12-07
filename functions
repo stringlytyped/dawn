@@ -1,0 +1,207 @@
+#!/usr/bin/env bash
+#
+# Shared utilities for setup scripts
+
+# FORMATTING
+reset='\033[00m'
+
+# FORGROUND COLORS
+fg_default='\033[39m'
+fg_black='\033[0;30m'
+fg_red='\033[0;31m'
+fg_green='\033[0;32m'
+fg_yellow='\033[0;33m'
+fg_blue='\033[0;34m'
+fg_magenta='\033[0;35m'
+fg_cyan='\033[0;36m'
+fg_grey='\033[0;90m'
+fg_red_light='\033[0;91m'
+fg_green_light='\033[0;92m'
+fg_yellow_light='\033[0;93m'
+fg_blue_light='\033[0;94m'
+fg_magenta_light='\033[0;95m'
+fg_cyan_light='\033[0;96m'
+fg_grey_light='\033[0;37m'
+fg_white='\033[0;97m'
+
+# BACKGROUND COLORS
+bg_default='\033[49m'
+bg_black='\033[0;40m'
+bg_red='\033[0;41m'
+bg_green='\033[0;42m'
+bg_yellow='\033[0;43m'
+bg_blue='\033[0;44m'
+bg_magenta='\033[0;45m'
+bg_cyan='\033[0;46m'
+bg_grey='\033[0;100m'
+bg_red_light='\033[0;101m'
+bg_green_light='\033[0;102m'
+bg_yellow_light='\033[0;103m'
+bg_blue_light='\033[0;104m'
+bg_magenta_light='\033[0;105m'
+bg_cyan_light='\033[0;106m'
+bg_grey_light='\033[0;47m'
+bg_white='\033[0;107m'
+
+# COLOR ECHO
+# Adapted from https://gist.github.com/brandonb927/3195465
+# Argument $1 = message
+# Argument $2 = color
+cecho() {
+  echo -e "${2}${1}"
+  tput sgr0
+  return
+}
+
+# ASK
+# Prompt the use for input.
+# Argument $1 = question
+# Sets variable "response" to the user's input.
+ask() {
+  echo ""
+  cecho "===================================================" $white
+  cecho "${1}" $blue
+  cecho "===================================================" $white
+  read -r response
+  echo ""
+}
+
+# YES/NO
+# Ask a yes/no question.
+# Argument $1 = question
+# Sets variable "response" to either "y" or "n".
+yn() {
+  ask $@
+  case $response in
+    [yY] | [yY][Ee][Ss] )
+      response="y"
+      ;;
+    [nN] | [nN][Oo] )
+      response="n"
+      ;;
+    *)
+      cecho "\nInvalid input. Try again:" $red
+      yn $@
+      ;;
+  esac
+}
+
+# Prompts the user for permission to perform an action, but only if the provided condition evaluates to true.
+# E.g. use install_prompt to check whether an app is installed before asking the user to install the app.
+# Argument $1 = string to evaluate as a conditional
+# Argument $2 = string containing question to ask if argument $1 is true
+# Argument $3 = string containing message to display if argument $1 is false
+# If condition is true, sets variable "response" to either "y" or "n".
+install_prompt() {
+  local condition="${1}"
+  local question="${2}"
+  local message="${3}"
+
+  if bash -c "${condition}"; then
+    yn "${question}"
+  else
+    unset response # unset any response variable set by a previous call to ask, yn or install_prompt
+    echo ""
+    cecho "${message}" $green
+  fi
+}
+
+brew_prompt() {
+  local formula_name="$1"
+  local display_name="$2"
+
+  install_prompt "test ! \"$(brew ls --versions $formula_name)\"" \
+                 "Install ${display_name}?" \
+                 "$display_name is already installed."
+  if [ "$response" = "y" ]; then
+    cecho "Installing…\n" $cyan
+    brew install "$formula_name"
+  elif [ "$response" = "n" ]; then
+    cecho "Skipping." $cyan
+  fi
+}
+
+# Install a Cask
+# Argument #1 = cask name
+# Argument #2 = friendly name
+install_cask() {
+  if ! $(brew cask ls "${1}" &> /dev/null); then
+    yn "Install ${2}?"
+    if [ $response = "y" ]; then
+      cecho "Installing…\n" $cyan
+      brew cask install ${1}
+    else
+      cecho "Skipping." $cyan
+    fi
+  fi
+}
+
+# Add separator to the dock
+add_dock_separator() {
+  defaults write com.apple.dock persistent-apps -array-add '{tile-data={}; tile-type="spacer-tile";}'
+}
+
+# Add an app icon to the dock
+# Argument #1 = path to app
+add_dock_icon() {
+  defaults write com.apple.dock persistent-apps -array-add "<dict><key>tile-data</key><dict><key>file-data</key><dict><key>_CFURLString</key><string>${1}</string><key>_CFURLStringType</key><integer>0</integer></dict></dict></dict>"
+}
+
+# Add an app icon to the dock for an app installed with Cask
+# Argument #1 = path to app relative to Caskroom folder
+add_cask_dock_icon() {
+  defaults write com.apple.dock persistent-apps -array-add "<dict><key>tile-data</key><dict><key>file-data</key><dict><key>_CFURLString</key><string>/opt/homebrew-cask/Caskroom/${1}</string><key>_CFURLStringType</key><integer>0</integer></dict></dict></dict>"
+}
+
+# Output short text in centre of window
+# From https://gist.github.com/deshawnbw/6331167
+# Argument #1 = text to echo
+# Argument #2 = text color (optional)
+hcenter() {
+ 
+  text="$1"
+ 
+  cols=`tput cols`
+ 
+  IFS=$'\n'$'\r'
+  for line in $(echo -e $text); do
+ 
+    line_length=`echo $line | wc -m | tr -d ' '`
+    half_of_line_length=`expr $line_length / 2`
+    center=`expr \( $cols / 2 \) - $half_of_line_length`
+ 
+    spaces=""
+    for ((i=0; i < $center; i++)) {
+      spaces="$spaces "
+    }
+ 
+    cecho "$spaces$line" "$2"
+ 
+  done
+ 
+}
+
+# Argument 1 = task number
+# Argument 2 = task title
+task_title() {
+  clear
+  hcenter " "
+  hcenter "Task $1️⃣"
+  hcenter " "
+  hcenter "$2"
+  sleep 2
+}
+
+# Ask for the administrator password upfront and run a
+# keep-alive to update existing `sudo` time stamp until script has finished
+# From https://gist.github.com/brandonb927/3195465
+sudo_keepalive() {
+  clear
+  hcenter " "
+  hcenter "🔒"
+  hcenter " "
+  echo -e "I'll need your administrator password to continue. By getting it right now, \nI wouldn't have to prompt you every time I need it."
+  echo ""
+  sudo -v
+  while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
+}

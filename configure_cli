@@ -1,0 +1,133 @@
+#!/usr/bin/env bash
+#
+# Installs and configures CLI utilities
+
+task_title 1 "Configure the Command Line"
+
+# Xcode Command-Line Tools
+install_prompt "test ! $(command -v gcc)" \
+               "Install the Xcode command-line tools?" \
+               "Xcode command-line tools are already installed."
+if [ "$response" = "y" ]; then
+  cecho "Installing…\n" "$cyan"
+  xcode-select --install
+elif [ "$response" = "n" ]; then
+  cecho "Skipping." "$cyan"
+fi
+
+# Homebrew
+install_prompt "test ! $(which brew)" \
+               "Install Homebrew? 🍺  (required)" \
+               "Homebrew 🍺  is already installed."
+if [ "$response" = "y" ]; then
+  cecho "Installing…\n" "$cyan"
+  ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+  cecho "\nUpdating recipes…\n" "$cyan"
+  brew update
+elif [ "$response" = "n" ]; then
+  cecho "Homebrew is required in order to proceed." "$red"
+  exit
+fi
+
+# Python
+# TODO: install pyenv
+# brew_prompt python "Python 3"
+# TODO: Write pip_prompt function
+# pip install powerline-status
+# pip install powerline-gitstatus
+
+# GNU Bash 4
+brew_prompt bash "Bash 4"
+
+# Change the login shell to Bash 4
+bash_path="$(brew --prefix bash 2> /dev/null)"
+if [ "$bash_path" != "" ]; then
+  bash_path="$bash_path/bin/bash"
+fi
+install_prompt "[ \"$SHELL\" != \"$bash_path\" ]" \
+               "Make Bash 4 the login shell?" \
+               "Bash 4 is already the login shell."
+if [ "$response" = "y" ]; then
+  cecho "Installing…\n" "$cyan"
+  sudo bash -c "echo $bash_path >> /etc/shells"
+  sudo chsh -s "$bash_path"
+elif [ "$response" = "n" ]; then
+  cecho "Skipping." "$cyan"
+fi
+
+yn "Turn off 'last login' message when openning a Terminal window?"
+if [ "$response" = y ]; then
+  touch ~/.hushlogin
+else
+  cecho "Skipping." "$cyan"
+fi
+
+# GNU coreutils
+brew_prompt coreutils "GNU version of coreutils"
+
+# GNU findutils
+brew_prompt findutils "GNU version of findutils"
+
+# GNU grep
+brew_prompt grep "GNU version of grep"
+
+# GNU wget
+brew_prompt wget "wget"
+
+# trash
+# http://hasseg.org/trash/
+brew_prompt trash "trash"
+
+# tree
+brew_prompt tree "tree"
+
+# Git
+brew_prompt git "Git"
+
+# hub
+# https://hub.github.com/
+brew_prompt hub "hub"
+
+# wiki
+# https://github.com/walle/wiki
+brew_prompt wiki "wiki"
+
+# weather
+# https://github.com/genuinetools/weather
+brew_prompt darksky-weather "weather"
+
+# cowsay
+brew_prompt cowsay "cowsay"
+
+# fortune
+brew_prompt fortune "fortune"
+
+# nyancat
+brew_prompt nyancat "nyancat"
+
+# neofetch
+brew_prompt neofetch "neofetch"
+
+# TODO: Install Node and Yarn
+# TODO: Install parrotsay and overtime
+# yarn global add parrotsay
+# yarn global add overtime-cli
+
+# Clean up formulas
+brew cleanup &> /dev/null
+
+# Black Frost Terminal Theme
+# Previously-used alternatives: Galaxy and Smyck
+default_theme=$(defaults read com.apple.Terminal "Default Window Settings")
+install_prompt "! test $default_theme = Black Frost" \
+               "Install Black Frost terminal theme?" \
+               "Black Frost terminal theme is already installed."
+if [ "$response" = "y" ]; then
+  cecho "Installing…\n" "$cyan"
+  xattr -d com.apple.quarantine "Black Frost.terminal"
+  open "Black Frost.terminal"
+  defaults write com.apple.Terminal "Default Window Settings" -string "Black Frost"
+  defaults write com.apple.Terminal "Startup Window Settings" -string "Black Frost"
+elif [ "$response" = "n" ]; then
+  cecho "Skipping." "$cyan"
+fi

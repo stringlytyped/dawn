@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+#
+# Installs Fonts
+
+task_title 3 "Install Fonts"
+
+yn "Install fonts?"
+if [ "$response" = y ]; then
+
+  brew tap caskroom/fonts &> /dev/null
+
+  fonts=(
+    font-cabin
+    font-cabin-condensed
+    font-cabin-sketch
+    font-fontawesome
+    font-open-sans
+    font-open-sans-condensed
+    font-open-sans-hebrew
+    font-open-sans-hebrew-condensed
+  )
+
+  cecho "Installing…\n" "$cyan"
+  brew cask install "${fonts[@]}"
+
+  # Clean up casks
+  brew cask cleanup &> /dev/null
+
+  # Install fonts not available on Cask
+  cp fonts/*/*.ttf /Library/Fonts/
+
+else
+
+  cecho "Skipping." "$cyan"
+
+fi

@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+#
+# Installs Applications
+
+task_title 2 "Install Applications"
+
+# Make sure that Homebrew is installed
+if test ! "$(command -v brew)"; then
+  cecho "Homebrew is required in order to proceed." "$red"
+fi
+
+# Add versions tap
+brew tap caskroom/versions
+
+install_cask firefoxdeveloperedition "Firefox Developer Edition"
+
+install_cask google-chrome "Google Chrome"
+
+install_cask opera "Opera"
+
+install_cask qlcolorcode "qlcolorcode"
+
+install_cask qlmarkdown "qlmarkdown"
+
+install_cask qlstephen "QLStephen"
+
+install_cask quicklook-json "quick look JSON"
+
+install_cask appcleaner "AppCleaner"
+
+install_cask hazel "Hazel"
+
+install_cask spotify "Spotify"
+
+install_cask sublime-text3 "Sublime Text 3"
+
+yn "Install Package Control for Sublime?"
+if [ "$response" = y ]; then
+  curl https://packagecontrol.io/Package%20Control.sublime-package > /Users/JS/Library/Application\ Support/Sublime\ Text\ 3/Installed\ Packages/Package\ Control.sublime-package
+else
+  cecho "Skipping." "$cyan"
+fi
+
+install_cask cyberduck "Cyberduck"
+
+install_cask tunnelblick "Tunnelblick"
+
+install_cask vlc "VLC"
+
+install_cask transmission "Transmission"
+
+# OSXFUSE and sshfs
+if test ! "$(command -v sshfs)"; then
+  yn "Install OSXFUSE and sshfs?"
+  if [ "$response" = "y" ]; then
+    cecho "Installing…\n" "$cyan"
+    brew cask install osxfuse
+    brew install sshfs
+  else
+    cecho "Skipping." "$cyan"
+  fi
+fi
+
+install_cask doxie "Doxie"
+
+install_cask evernote "Evernote"
+
+install_cask minecraft "Minecraft"
+
+install_cask steam "Steam"
+
+install_cask origin "Origin"
+
+install_cask handbrake "Handbrake"
+
+install_cask subler "Subler"
+
+install_cask sourcetree "SourceTree"
+
+install_cask teamviewer "TeamViewer"
+
+install_cask keka "Keka"
+
+install_cask the-unarchiver "The Unarchiver"
+
+# Clean up casks
+brew cask cleanup &> /dev/null
