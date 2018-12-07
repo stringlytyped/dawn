@@ -1,6 +1,6 @@
 # Dawn
 
-![Screenshot](screenshot.png | width=776)
+![Screenshot](screenshot.png)
 
 Dawn is a macOS setup script which automatically configures a clean install of the OS, installing applications and CLI tools, adding favourite fonts and setting sensible system defaults. It forms part of my larger macOS setup which consists of:
 
